@@ -308,8 +308,8 @@ export const semantic = {
 export type ColorScheme = 'light' | 'dark';
 
 export type Theme = {
-  colors: typeof palette.light;
-  semantic: typeof semantic.light;
+  colors: (typeof palette)[ColorScheme];
+  semantic: (typeof semantic)[ColorScheme];
   typography: typeof typography;
   spacing: typeof spacing;
   radius: typeof radius;
