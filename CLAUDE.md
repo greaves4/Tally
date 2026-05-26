@@ -196,7 +196,8 @@ types/                  # TS types compartidos
 
 > Actualiza esta sección a medida que avances.
 
-- [ ] Setup inicial Expo + TypeScript + Zustand + expo-sqlite
+- [x] Setup inicial Expo + TypeScript + Zustand + expo-sqlite (Sprint 0)
+- [x] ThemeProvider + useTheme + componentes base Text/Card/PressableCard (Sprint 1)
 - [ ] Interfaz `StepSource` definida
 - [ ] `SimulatedStepSource` funcionando con panel de debug
 - [ ] Persistencia diaria con SQLite
