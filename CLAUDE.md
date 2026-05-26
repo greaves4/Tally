@@ -202,6 +202,10 @@ types/                  # TS types compartidos
 - [x] `SimulatedStepSource` funcionando con panel de debug mínimo (Sprint 2)
 - [x] Persistencia daily_steps + simulator_steps con SQLite (Sprint 2)
 - [x] Hook `useStepsToday` con AppState listener y buffer anti-race (Sprint 2)
+- [x] Tabs Hoy/Progreso/Ajustes con expo-router + íconos Lucide (Sprint 3)
+- [x] Componentes Home: ProgressRing, DataSourceIndicator, MissionCard, HomeHeader (Sprint 3)
+- [x] Reset proactivo de medianoche `useDailyStepReset` (Sprint 3)
+- [x] Pantalla Home real ensamblada en `app/(tabs)/index.tsx` (Sprint 3)
 - [ ] Reset de medianoche
 - [ ] Sistema de misiones + streak + comodín
 - [ ] Design system aplicado a todas las pantallas
