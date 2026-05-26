@@ -4,6 +4,9 @@ import { PressableCard } from '@/components/base/PressableCard';
 import { Text, type TextVariant } from '@/components/base/Text';
 import { useThemeContext, useTheme } from '@/design-system/useTheme';
 import type { ColorSchemePreference } from '@/design-system/ThemeProvider';
+import { useStepsToday } from '@/hooks/useStepsToday';
+import { getStepSource, type StepSourceInstance } from '@/features/steps/sources';
+import { SimulatorPanelMinimal } from '@/features/simulator/SimulatorPanelMinimal';
 
 const TYPOGRAPHY_VARIANTS: TextVariant[] = [
   'displayHero',
@@ -35,6 +38,17 @@ function nextPreference(current: ColorSchemePreference): ColorSchemePreference {
 
 export default function DesignTestScreen() {
   const { theme, scheme, preference, setPreference } = useThemeContext();
+  const { stepsToday, source, isReady } = useStepsToday();
+
+  const handleAddSteps = async (amount: number) => {
+    // Cast intencional: solo válido mientras la factory devuelva SimulatedStepSource.
+    // `addSteps` no existe en la interfaz `StepSource`; es del shape concreto del
+    // simulador. NO COPIAR ESTE PATRÓN A CÓDIGO DE PRODUCTO. El panel definitivo
+    // recibirá `onAddSteps` desde un wrapper que lo cablee — no haciendo el cast
+    // inline en la pantalla. Esta pantalla es de validación y se borrará en Sprint 3.
+    const instance = getStepSource() as StepSourceInstance;
+    await instance.addSteps(amount);
+  };
 
   const screenStyle: ViewStyle = {
     flexGrow: 1,
@@ -114,6 +128,17 @@ export default function DesignTestScreen() {
             </View>
           ))}
         </View>
+      </View>
+
+      <View style={sectionStyle}>
+        <Text variant="headlineMd">Sprint 2 — Step Source</Text>
+        <Text variant="displayHeroMobile" color="counterPrimary">
+          {isReady ? stepsToday.toLocaleString('es-AR') : '…'}
+        </Text>
+        <Text variant="labelSm" color="onSurfaceVariant">
+          Fuente: {source} · {isReady ? 'listo' : 'cargando'}
+        </Text>
+        <SimulatorPanelMinimal onAddSteps={handleAddSteps} />
       </View>
     </ScrollView>
   );

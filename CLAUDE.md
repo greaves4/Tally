@@ -198,9 +198,10 @@ types/                  # TS types compartidos
 
 - [x] Setup inicial Expo + TypeScript + Zustand + expo-sqlite (Sprint 0)
 - [x] ThemeProvider + useTheme + componentes base Text/Card/PressableCard (Sprint 1)
-- [ ] Interfaz `StepSource` definida
-- [ ] `SimulatedStepSource` funcionando con panel de debug
-- [ ] Persistencia diaria con SQLite
+- [x] Interfaz `StepSource` definida (Sprint 2)
+- [x] `SimulatedStepSource` funcionando con panel de debug mínimo (Sprint 2)
+- [x] Persistencia daily_steps + simulator_steps con SQLite (Sprint 2)
+- [x] Hook `useStepsToday` con AppState listener y buffer anti-race (Sprint 2)
 - [ ] Reset de medianoche
 - [ ] Sistema de misiones + streak + comodín
 - [ ] Design system aplicado a todas las pantallas
