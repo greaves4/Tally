@@ -20,6 +20,14 @@ import {
   type SQLiteDatabase,
 } from 'expo-sqlite';
 
+import type {
+  MissionParams,
+  MissionStatus,
+  MissionType,
+  StepEvent,
+  StreakState,
+} from '@/features/missions/types';
+
 // =============================================================================
 // Tipos públicos
 // =============================================================================
@@ -83,6 +91,26 @@ const SCHEMA_SQL = `
   );
 
   CREATE INDEX IF NOT EXISTS idx_simulator_timestamp ON simulator_steps(timestamp);
+
+  CREATE TABLE IF NOT EXISTS missions_daily (
+    date TEXT PRIMARY KEY,
+    template_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    params TEXT NOT NULL,
+    completed INTEGER NOT NULL,
+    completed_at TEXT,
+    used_wildcard INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS streak_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    current_streak INTEGER NOT NULL,
+    longest_streak INTEGER NOT NULL,
+    wildcards_available INTEGER NOT NULL,
+    last_wildcard_regen TEXT,
+    last_evaluated_date TEXT
+  );
 `;
 
 // =============================================================================
@@ -297,4 +325,403 @@ export async function getSimulatorStepsForRange(
   // permanece `number | null` por seguridad. Normalizamos a 0.
   if (row === null || row.total === null) return 0;
   return row.total;
+}
+
+// =============================================================================
+// API pública: simulador (eventos crudos para análisis por hora / bloques)
+// =============================================================================
+
+/** Forma cruda de una fila de `simulator_steps`. */
+type SimulatorStepRow = {
+  timestamp: string;
+  amount: number;
+};
+
+/**
+ * Devuelve los eventos crudos del simulador en el rango `[from, to]`,
+ * ordenados ascendentemente por timestamp.
+ *
+ * A diferencia de `getSimulatorStepsForRange` (que suma todo), aquí devolvemos
+ * los eventos individuales. Lo necesita el motor de misiones para construir
+ * `stepsByHour` y evaluar misiones tipo CONSECUTIVE_BLOCKS o NO_ZERO_HOURS.
+ *
+ * Si no hay eventos en el rango, devuelve `[]`.
+ */
+export async function getSimulatorStepEventsForRange(
+  from: Date,
+  to: Date,
+): Promise<StepEvent[]> {
+  const db = await openDb();
+  const rows = await db.getAllAsync<SimulatorStepRow>(
+    `SELECT timestamp, amount
+     FROM simulator_steps
+     WHERE timestamp >= ? AND timestamp <= ?
+     ORDER BY timestamp ASC`,
+    [from.toISOString(), to.toISOString()],
+  );
+
+  return rows.map((row) => ({
+    timestamp: new Date(row.timestamp),
+    amount: row.amount,
+  }));
+}
+
+// =============================================================================
+// Tipos internos: misiones y streak
+// =============================================================================
+
+/**
+ * Forma cruda de una fila de `missions_daily`. Los enteros booleanos llegan
+ * como `number` (0/1); `params` viene como string JSON serializado.
+ */
+type MissionRow = {
+  date: string;
+  template_id: string;
+  title: string;
+  description: string;
+  params: string;
+  completed: number;
+  completed_at: string | null;
+  used_wildcard: number;
+};
+
+/** Forma cruda de la fila singleton de `streak_state` (id=1). */
+type StreakRow = {
+  id: number;
+  current_streak: number;
+  longest_streak: number;
+  wildcards_available: number;
+  last_wildcard_regen: string | null;
+  last_evaluated_date: string | null;
+};
+
+/** Forma cruda al hacer SELECT template_id. */
+type TemplateIdRow = {
+  template_id: string;
+};
+
+// =============================================================================
+// Type guards: validación defensiva de `params` parseado desde JSON
+// =============================================================================
+
+const VALID_MISSION_TYPES: ReadonlySet<MissionType> = new Set<MissionType>([
+  'TOTAL_STEPS',
+  'STEPS_BEFORE_TIME',
+  'STEPS_AFTER_TIME',
+  'BEAT_AVERAGE',
+  'CONSECUTIVE_BLOCKS',
+  'NO_ZERO_HOURS',
+  'STREAK_PROTECTION',
+]);
+
+function isMissionType(value: unknown): value is MissionType {
+  return (
+    typeof value === 'string' && VALID_MISSION_TYPES.has(value as MissionType)
+  );
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/**
+ * Valida un `unknown` (típicamente resultado de `JSON.parse`) y lo narrowea
+ * a `MissionParams`. Devuelve `null` si la forma no calza con ninguno de los
+ * variantes del discriminated union.
+ *
+ * Estricto a propósito: si el JSON está corrupto o pertenece a una versión
+ * vieja del esquema, preferimos descartar la misión a propagar un valor mal
+ * formado al resto del sistema.
+ */
+function parseMissionParams(value: unknown): MissionParams | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const obj = value as Record<string, unknown>;
+  const type = obj.type;
+  if (!isMissionType(type)) return null;
+
+  switch (type) {
+    case 'TOTAL_STEPS': {
+      if (!isFiniteNumber(obj.target)) return null;
+      return { type, target: obj.target };
+    }
+    case 'STEPS_BEFORE_TIME':
+    case 'STEPS_AFTER_TIME': {
+      if (!isFiniteNumber(obj.target) || !isFiniteNumber(obj.hour)) return null;
+      return { type, target: obj.target, hour: obj.hour };
+    }
+    case 'BEAT_AVERAGE': {
+      if (!isFiniteNumber(obj.reference)) return null;
+      return { type, reference: obj.reference };
+    }
+    case 'CONSECUTIVE_BLOCKS': {
+      if (
+        !isFiniteNumber(obj.blocks) ||
+        !isFiniteNumber(obj.stepsPerBlock) ||
+        !isFiniteNumber(obj.minMinutesBetween)
+      ) {
+        return null;
+      }
+      return {
+        type,
+        blocks: obj.blocks,
+        stepsPerBlock: obj.stepsPerBlock,
+        minMinutesBetween: obj.minMinutesBetween,
+      };
+    }
+    case 'NO_ZERO_HOURS': {
+      if (!isFiniteNumber(obj.startHour) || !isFiniteNumber(obj.endHour)) {
+        return null;
+      }
+      return { type, startHour: obj.startHour, endHour: obj.endHour };
+    }
+    case 'STREAK_PROTECTION': {
+      if (!isFiniteNumber(obj.maxSteps)) return null;
+      return { type, maxSteps: obj.maxSteps };
+    }
+  }
+}
+
+// =============================================================================
+// Helpers internos de mapeo: misiones y streak
+// =============================================================================
+
+/**
+ * Mapea una `MissionRow` a `MissionStatus`. Devuelve `null` si `params` no
+ * puede parsearse como JSON válido o si la forma resultante no es un
+ * `MissionParams` reconocido. Los callers ya tratan `null` como "no hay
+ * misión" — esto es consistente con datos corruptos: ignoramos la misión.
+ */
+function mapMissionRow(row: MissionRow): MissionStatus | null {
+  let parsedUnknown: unknown;
+  try {
+    parsedUnknown = JSON.parse(row.params);
+  } catch {
+    // Logger temporal: TODO migrar a `lib/logger.ts` cuando exista.
+    console.warn(
+      `[db] mission ${row.date}: params no es JSON válido, ignorando misión`,
+    );
+    return null;
+  }
+
+  const params = parseMissionParams(parsedUnknown);
+  if (params === null) {
+    console.warn(
+      `[db] mission ${row.date}: forma de params no reconocida, ignorando misión`,
+    );
+    return null;
+  }
+
+  return {
+    date: row.date,
+    templateId: row.template_id,
+    title: row.title,
+    description: row.description,
+    params,
+    completed: row.completed === 1,
+    completedAt: row.completed_at,
+    usedWildcard: row.used_wildcard === 1,
+  };
+}
+
+function mapStreakRow(row: StreakRow): StreakState {
+  return {
+    current: row.current_streak,
+    longest: row.longest_streak,
+    wildcardsAvailable: row.wildcards_available,
+    lastWildcardRegen: row.last_wildcard_regen,
+    lastEvaluatedDate: row.last_evaluated_date,
+  };
+}
+
+// =============================================================================
+// API pública: misiones diarias
+// =============================================================================
+
+/**
+ * Devuelve la misión persistida para la fecha indicada (`'YYYY-MM-DD'`).
+ *
+ * Devuelve `null` si:
+ * - No hay row para esa fecha.
+ * - `params` está corrupto (JSON inválido o forma desconocida). En ese caso
+ *   loggea un warning. El caller suele tratar "null" como "regenerar misión".
+ */
+export async function getMissionForDate(
+  date: string,
+): Promise<MissionStatus | null> {
+  const db = await openDb();
+  const row = await db.getFirstAsync<MissionRow>(
+    `SELECT date, template_id, title, description, params,
+            completed, completed_at, used_wildcard
+     FROM missions_daily
+     WHERE date = ?`,
+    [date],
+  );
+
+  return row === null ? null : mapMissionRow(row);
+}
+
+/**
+ * Inserta o actualiza la misión del día. Idempotente: llamar dos veces con
+ * el mismo `date` sobrescribe los campos.
+ *
+ * `params` se serializa a JSON. Los flags booleanos se persisten como 0/1.
+ */
+export async function upsertMission(record: MissionStatus): Promise<void> {
+  const db = await openDb();
+  const paramsJson = JSON.stringify(record.params);
+
+  await db.runAsync(
+    `INSERT INTO missions_daily (
+       date, template_id, title, description, params,
+       completed, completed_at, used_wildcard
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(date) DO UPDATE SET
+       template_id = excluded.template_id,
+       title = excluded.title,
+       description = excluded.description,
+       params = excluded.params,
+       completed = excluded.completed,
+       completed_at = excluded.completed_at,
+       used_wildcard = excluded.used_wildcard`,
+    [
+      record.date,
+      record.templateId,
+      record.title,
+      record.description,
+      paramsJson,
+      record.completed ? 1 : 0,
+      record.completedAt,
+      record.usedWildcard ? 1 : 0,
+    ],
+  );
+}
+
+/**
+ * Marca como completada la misión del `date` indicado, sin tocar el resto de
+ * campos (template_id, title, params, etc.). Establece `completed_at` al
+ * instante actual en ISO 8601.
+ *
+ * Si no existe row para esa fecha, el UPDATE no afecta filas — silenciosamente.
+ * El caller es responsable de garantizar que la misión exista antes (lo
+ * normal es haberla generado con `upsertMission` el mismo día).
+ */
+export async function markMissionCompleted(
+  date: string,
+  usedWildcard: boolean,
+): Promise<void> {
+  const db = await openDb();
+  const completedAt = new Date().toISOString();
+
+  await db.runAsync(
+    `UPDATE missions_daily
+     SET completed = 1,
+         completed_at = ?,
+         used_wildcard = ?
+     WHERE date = ?`,
+    [completedAt, usedWildcard ? 1 : 0, date],
+  );
+}
+
+/**
+ * Devuelve los `template_id` de las misiones registradas en fechas
+ * estrictamente anteriores a `beforeDate`, ordenados de más reciente a más
+ * vieja, con un máximo de `limit` resultados.
+ *
+ * Lo usa el selector para excluir las plantillas recientemente usadas y
+ * forzar variedad.
+ */
+export async function getRecentMissionIds(
+  beforeDate: string,
+  limit: number,
+): Promise<string[]> {
+  const db = await openDb();
+  const rows = await db.getAllAsync<TemplateIdRow>(
+    `SELECT template_id
+     FROM missions_daily
+     WHERE date < ?
+     ORDER BY date DESC
+     LIMIT ?`,
+    [beforeDate, limit],
+  );
+
+  return rows.map((r) => r.template_id);
+}
+
+// =============================================================================
+// API pública: streak (singleton row con id=1)
+// =============================================================================
+
+/** Estado inicial usado en el seed si la tabla está vacía. */
+const STREAK_INITIAL: StreakState = {
+  current: 0,
+  longest: 0,
+  wildcardsAvailable: 0,
+  lastWildcardRegen: null,
+  lastEvaluatedDate: null,
+};
+
+/**
+ * Devuelve el estado del streak (siempre la row `id=1`).
+ *
+ * Si la tabla está vacía (primer arranque del usuario), hace SEED LAZY:
+ * inserta una row con valores iniciales en cero/null y la devuelve. Idempotente:
+ * llamadas siguientes encuentran el row y simplemente lo devuelven.
+ */
+export async function getStreakState(): Promise<StreakState> {
+  const db = await openDb();
+  const row = await db.getFirstAsync<StreakRow>(
+    `SELECT id, current_streak, longest_streak,
+            wildcards_available, last_wildcard_regen, last_evaluated_date
+     FROM streak_state
+     WHERE id = 1`,
+  );
+
+  if (row !== null) {
+    return mapStreakRow(row);
+  }
+
+  // Seed lazy: la tabla está vacía. Insertamos la row inicial.
+  await db.runAsync(
+    `INSERT INTO streak_state (
+       id, current_streak, longest_streak,
+       wildcards_available, last_wildcard_regen, last_evaluated_date
+     ) VALUES (1, ?, ?, ?, ?, ?)`,
+    [
+      STREAK_INITIAL.current,
+      STREAK_INITIAL.longest,
+      STREAK_INITIAL.wildcardsAvailable,
+      STREAK_INITIAL.lastWildcardRegen,
+      STREAK_INITIAL.lastEvaluatedDate,
+    ],
+  );
+
+  return STREAK_INITIAL;
+}
+
+/**
+ * Actualiza el estado del streak. Hace upsert sobre la row `id=1`: si por
+ * algún motivo no existiera (no debería tras `getStreakState`), se crea.
+ */
+export async function updateStreakState(state: StreakState): Promise<void> {
+  const db = await openDb();
+
+  await db.runAsync(
+    `INSERT INTO streak_state (
+       id, current_streak, longest_streak,
+       wildcards_available, last_wildcard_regen, last_evaluated_date
+     ) VALUES (1, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       current_streak = excluded.current_streak,
+       longest_streak = excluded.longest_streak,
+       wildcards_available = excluded.wildcards_available,
+       last_wildcard_regen = excluded.last_wildcard_regen,
+       last_evaluated_date = excluded.last_evaluated_date`,
+    [
+      state.current,
+      state.longest,
+      state.wildcardsAvailable,
+      state.lastWildcardRegen,
+      state.lastEvaluatedDate,
+    ],
+  );
 }

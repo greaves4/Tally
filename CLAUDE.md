@@ -206,6 +206,9 @@ types/                  # TS types compartidos
 - [x] Componentes Home: ProgressRing, DataSourceIndicator, MissionCard, HomeHeader (Sprint 3)
 - [x] Reset proactivo de medianoche `useDailyStepReset` (Sprint 3)
 - [x] Pantalla Home real ensamblada en `app/(tabs)/index.tsx` (Sprint 3)
+- [x] Sistema de misiones diarias: 13 plantillas (7 tipos), motor, comodín semanal, streak (Sprint 4)
+- [x] Hook `useDailyMission` con bootstrap coalescente + auto-complete in-vivo (Sprint 4)
+- [x] Pantalla `/mission-details` con tip por tipo y estado completado (Sprint 4)
 - [ ] Reset de medianoche
 - [ ] Sistema de misiones + streak + comodín
 - [ ] Design system aplicado a todas las pantallas
