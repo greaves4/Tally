@@ -140,11 +140,7 @@ export function useStepsToday(): UseStepsTodayResult {
 
   return {
     stepsToday,
-    // TODO Sprint N: leer del Constants/factory cuando exista PedometerStepSource.
-    // Por ahora la factory `getStepSource()` siempre devuelve SimulatedStepSource,
-    // así que hardcodear 'simulated' es correcto y evita exponer un getter extra
-    // en la interfaz `StepSource` solo para esto.
-    source: 'simulated',
+    source: getStepSource().kind,
     isReady,
   };
 }

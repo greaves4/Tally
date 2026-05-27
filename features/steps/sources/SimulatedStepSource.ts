@@ -40,6 +40,8 @@ type IntervalHandle = ReturnType<typeof setInterval>;
 type StepListener = (newSteps: number) => void;
 
 export class SimulatedStepSource implements StepSource {
+  readonly kind = 'simulated' as const;
+
   private readonly listeners: Set<StepListener> = new Set();
   private autoWalkInterval: IntervalHandle | null = null;
 

@@ -41,7 +41,7 @@ export function DataSourceIndicator({ source }: DataSourceIndicatorProps) {
     ? theme.colors.onSecondaryContainer
     : theme.colors.onPrimaryContainer;
 
-  const label = isSimulated ? 'Simulador' : 'iPhone';
+  const label = isSimulated ? 'Simulador' : 'Pedómetro';
 
   const Icon = isSimulated ? Tag : Smartphone;
 

@@ -11,6 +11,9 @@
 
 export type PermissionStatus = 'granted' | 'denied' | 'undetermined' | 'unavailable';
 
+/** Identifica la implementación concreta activa. Usada por la UI (DataSourceIndicator). */
+export type SourceKind = 'simulated' | 'pedometer';
+
 /**
  * Handle devuelto por `watchSteps`. Llamar a `remove()` desuscribe el callback.
  * Cleanup OBLIGATORIO en el return de `useEffect`.
@@ -20,6 +23,9 @@ export type Subscription = {
 };
 
 export interface StepSource {
+  /** Identifica la implementación. Solo para UI; nunca condiciones en lógica de negocio. */
+  readonly kind: SourceKind;
+
   /** ¿Existe esta fuente en el dispositivo actual? */
   isAvailable(): Promise<boolean>;
 

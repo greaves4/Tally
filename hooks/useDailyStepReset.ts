@@ -45,9 +45,9 @@ import {
   type SourceType,
 } from '@/lib/db';
 
-// Ver TODO en el bloque de doc del archivo. Centralizamos la constante para
-// que el día que cambie el origen quede en un solo punto.
-const CURRENT_SOURCE_TYPE: SourceType = 'simulated';
+// La factory decide qué implementación está activa; leer de ella para que el
+// SourceType en daily_steps refleje si los pasos vienen del Pedómetro real o del simulador.
+const CURRENT_SOURCE_TYPE: SourceType = getStepSource().kind;
 
 export type UseDailyStepResetResult = {
   /**
