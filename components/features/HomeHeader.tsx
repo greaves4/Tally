@@ -1,5 +1,6 @@
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { Bell } from 'lucide-react-native';
+import { Svg, Line } from 'react-native-svg';
 import { Text } from '@/components/base/Text';
 import { useTheme } from '@/design-system/useTheme';
 
@@ -13,11 +14,6 @@ export type HomeHeaderProps = {
   currentDate: Date;
 };
 
-/**
- * Formatea la fecha en español rioplatense con la primera letra en mayúscula.
- * iOS suele devolver "jueves, 24 de octubre" (todo minúsculas), así que se
- * capitaliza el primer carácter manualmente.
- */
 function formatLocalizedDate(date: Date): string {
   const raw = date.toLocaleDateString('es-AR', {
     weekday: 'long',
@@ -29,20 +25,21 @@ function formatLocalizedDate(date: Date): string {
   return `${first}${rest}`;
 }
 
-/**
- * Header del Home (DI-010).
- *
- *   [Avatar 40pt]  Hola, {name}        🔔
- *                  Jueves, 24 de Octubre
- *
- * Avatar es decorativo (no clickeable). Bell tiene touch target ≥ 44pt.
- * El `onPress` de Bell es placeholder hasta que se integre el panel de
- * notificaciones en un sprint futuro.
- */
+function TallyIcon({ size, color }: { size: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 56 56">
+      <Line x1="8"  y1="10" x2="8"  y2="46" stroke={color} strokeWidth={5} strokeLinecap="round"/>
+      <Line x1="20" y1="10" x2="20" y2="46" stroke={color} strokeWidth={5} strokeLinecap="round"/>
+      <Line x1="32" y1="10" x2="32" y2="46" stroke={color} strokeWidth={5} strokeLinecap="round"/>
+      <Line x1="44" y1="10" x2="44" y2="46" stroke={color} strokeWidth={5} strokeLinecap="round"/>
+      <Line x1="2"  y1="44" x2="50" y2="12" stroke={color} strokeWidth={5} strokeLinecap="round"/>
+    </Svg>
+  );
+}
+
 export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
   const theme = useTheme();
 
-  const initial = userName.trim().charAt(0).toUpperCase() || '?';
   const formattedDate = formatLocalizedDate(currentDate);
 
   const containerStyle: ViewStyle = {
@@ -64,7 +61,7 @@ export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primaryContainer,
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   };
@@ -80,7 +77,6 @@ export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
     justifyContent: 'center',
   };
 
-  // TODO Sprint N: abrir panel de notificaciones cuando exista la feature.
   const handleBellPress = (): void => {};
 
   return (
@@ -89,11 +85,9 @@ export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
         <View
           style={avatarStyle}
           accessible
-          accessibilityLabel={`Avatar de ${userName}`}
+          accessibilityLabel="Tally"
         >
-          <Text variant="labelMd" color="onPrimaryContainer">
-            {initial}
-          </Text>
+          <TallyIcon size={24} color={theme.colors.onPrimary} />
         </View>
         <View style={textBlockStyle}>
           <Text variant="headlineMd" color="primary">

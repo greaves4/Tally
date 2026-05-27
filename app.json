@@ -1,19 +1,24 @@
 {
   "expo": {
-    "name": "StepApp",
-    "slug": "stepapp",
-    "scheme": "stepapp",
+    "name": "Tally",
+    "slug": "tally",
+    "scheme": "tally",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#151515"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.gerardogreaves.stepapp"
+      "bundleIdentifier": "com.gerardogreaves.tally"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#151515",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

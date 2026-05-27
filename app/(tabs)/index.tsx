@@ -25,7 +25,7 @@ const GOAL_STEPS = 8000;
 
 // TODO Sprint 5: estos valores serán dinámicos cuando se calculen métricas
 // derivadas (calorías y distancia) desde pasos reales.
-const USER_NAME = 'Martín';
+const USER_NAME = 'Gerry';
 const MOCK_CALORIES = 312;
 const MOCK_DISTANCE_KM = 2.4;
 

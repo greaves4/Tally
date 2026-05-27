@@ -1,11 +1,8 @@
 /**
- * StepApp — Design Tokens
- * Sistema: "Warm Intentionality"
+ * Tally — Design Tokens
+ * Sistema: "Dark-first / Accent Lime"
  *
  * FUENTE DE VERDAD ÚNICA.
- *
- * Este archivo es la única fuente de verdad para tokens visuales del proyecto.
- * Donde los mockups difieran de estos valores, gana el token.
  *
  * Reglas:
  * - No hardcodear colores en componentes. Importar siempre desde aquí.
@@ -14,125 +11,125 @@
  */
 
 // =====================================================================
-// COLORES (Material 3 — Warm Intentionality)
+// COLORES
 // =====================================================================
 
 export const palette = {
   light: {
-    // Surfaces (capa base hacia capas elevadas)
-    surface: '#FFF8F3',
-    surfaceDim: '#DFD9D4',
-    surfaceBright: '#FFF8F3',
-    surfaceContainerLowest: '#FFFFFF',
-    surfaceContainerLow: '#F9F2ED',
-    surfaceContainer: '#F3EDE7',
-    surfaceContainerHigh: '#EDE7E2',
-    surfaceContainerHighest: '#E7E1DC',
+    // Surfaces
+    surface: '#1E1E1E',
+    surfaceDim: '#151515',
+    surfaceBright: '#2C2C2C',
+    surfaceContainerLowest: '#0D0D0D',
+    surfaceContainerLow: '#151515',
+    surfaceContainer: '#1A1A1A',
+    surfaceContainerHigh: '#252525',
+    surfaceContainerHighest: '#2C2C2C',
 
-    // On-surface (texto e íconos sobre surfaces)
-    onSurface: '#1D1B18',
-    onSurfaceVariant: '#43483F',
+    // On-surface
+    onSurface: '#F4F4F1',
+    onSurfaceVariant: '#888888',
 
-    // Inverso (para tooltips, snackbars, etc.)
-    inverseSurface: '#32302D',
-    inverseOnSurface: '#F6F0EA',
-    inversePrimary: '#AFD09F',
+    // Inverso
+    inverseSurface: '#F4F4F1',
+    inverseOnSurface: '#1E1E1E',
+    inversePrimary: '#C5F04A',
 
     // Outline
-    outline: '#73796E',
-    outlineVariant: '#C3C8BC',
+    outline: '#666666',
+    outlineVariant: '#222222',
 
-    // Primary — Moss Green (verde musgo)
-    primary: '#446139',
-    onPrimary: '#FFFFFF',
-    primaryContainer: '#5C7A50',
-    onPrimaryContainer: '#E9FFDB',
+    // Primary — Accent Lime
+    primary: '#C5F04A',
+    onPrimary: '#0A0A0A',
+    primaryContainer: '#D8F77D',
+    onPrimaryContainer: '#0A0A0A',
 
-    // Secondary — Terracotta (logros, racha, comodín)
-    secondary: '#8D4E1F',
-    onSecondary: '#FFFFFF',
-    secondaryContainer: '#FEAB74',
-    onSecondaryContainer: '#783D0F',
+    // Secondary — Muted
+    secondary: '#888888',
+    onSecondary: '#F4F4F1',
+    secondaryContainer: '#252525',
+    onSecondaryContainer: '#F4F4F1',
 
-    // Tertiary — Clay (alertas suaves)
+    // Tertiary — Terracota (acciones destructivas)
     tertiary: '#983A31',
     onTertiary: '#FFFFFF',
     tertiaryContainer: '#B85247',
     onTertiaryContainer: '#FFF6F4',
 
     // Error
-    error: '#BA1A1A',
+    error: '#CF6679',
     onError: '#FFFFFF',
-    errorContainer: '#FFDAD6',
-    onErrorContainer: '#93000A',
+    errorContainer: '#5C0000',
+    onErrorContainer: '#FFDAD6',
 
-    // Background (alias de surface por compatibilidad)
-    background: '#FFF8F3',
-    onBackground: '#1D1B18',
+    // Background
+    background: '#151515',
+    onBackground: '#F4F4F1',
   },
 
   dark: {
-    surface: '#1A1816',
-    surfaceDim: '#1A1816',
-    surfaceBright: '#403D3A',
-    surfaceContainerLowest: '#141312',
-    surfaceContainerLow: '#22201E',
-    surfaceContainer: '#262422',
-    surfaceContainerHigh: '#312F2C',
-    surfaceContainerHighest: '#3C3A37',
+    surface: '#1E1E1E',
+    surfaceDim: '#151515',
+    surfaceBright: '#2C2C2C',
+    surfaceContainerLowest: '#0D0D0D',
+    surfaceContainerLow: '#151515',
+    surfaceContainer: '#1A1A1A',
+    surfaceContainerHigh: '#252525',
+    surfaceContainerHighest: '#2C2C2C',
 
-    onSurface: '#F5F1EA',
-    onSurfaceVariant: '#C7C2BA',
+    onSurface: '#F4F4F1',
+    onSurfaceVariant: '#888888',
 
-    inverseSurface: '#F5F1EA',
-    inverseOnSurface: '#32302D',
-    inversePrimary: '#446139',
+    inverseSurface: '#F4F4F1',
+    inverseOnSurface: '#1E1E1E',
+    inversePrimary: '#C5F04A',
 
-    outline: '#8E948A',
-    outlineVariant: '#43483F',
+    outline: '#666666',
+    outlineVariant: '#222222',
 
-    primary: '#AFD09F',
-    onPrimary: '#1A300F',
-    primaryContainer: '#324E28',
-    onPrimaryContainer: '#CAECB9',
+    primary: '#C5F04A',
+    onPrimary: '#0A0A0A',
+    primaryContainer: '#D8F77D',
+    onPrimaryContainer: '#0A0A0A',
 
-    secondary: '#FFB688',
-    onSecondary: '#532500',
-    secondaryContainer: '#703708',
-    onSecondaryContainer: '#FFDBC7',
+    secondary: '#888888',
+    onSecondary: '#F4F4F1',
+    secondaryContainer: '#252525',
+    onSecondaryContainer: '#F4F4F1',
 
-    tertiary: '#FFB4AA',
-    onTertiary: '#5F1410',
-    tertiaryContainer: '#802821',
-    onTertiaryContainer: '#FFDAD5',
+    tertiary: '#983A31',
+    onTertiary: '#FFFFFF',
+    tertiaryContainer: '#B85247',
+    onTertiaryContainer: '#FFF6F4',
 
-    error: '#FFB4AB',
-    onError: '#690005',
-    errorContainer: '#93000A',
+    error: '#CF6679',
+    onError: '#FFFFFF',
+    errorContainer: '#5C0000',
     onErrorContainer: '#FFDAD6',
 
-    background: '#1A1816',
-    onBackground: '#F5F1EA',
+    background: '#151515',
+    onBackground: '#F4F4F1',
   },
 } as const;
 
 // =====================================================================
-// TIPOGRAFÍA
+// TIPOGRAFÍA — Inter
 // =====================================================================
 
 export const typography = {
-  fontFamily: 'PlusJakartaSans',  // cargado via expo-font
+  fontFamily: 'Inter',
 
   displayHero: {
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 56,
     fontWeight: '700' as const,
     lineHeight: 64,
-    letterSpacing: -1.12,  // -0.02em ≈ -1.12 a 56px
+    letterSpacing: -1.12,
   },
 
   displayHeroMobile: {
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 40,
     fontWeight: '700' as const,
     lineHeight: 48,
@@ -140,7 +137,7 @@ export const typography = {
   },
 
   headlineLg: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 32,
     fontWeight: '600' as const,
     lineHeight: 40,
@@ -148,7 +145,7 @@ export const typography = {
   },
 
   headlineMd: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 24,
     fontWeight: '600' as const,
     lineHeight: 32,
@@ -156,7 +153,7 @@ export const typography = {
   },
 
   bodyLg: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 18,
     fontWeight: '400' as const,
     lineHeight: 28,
@@ -164,7 +161,7 @@ export const typography = {
   },
 
   bodyMd: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 16,
     fontWeight: '400' as const,
     lineHeight: 24,
@@ -172,7 +169,7 @@ export const typography = {
   },
 
   labelMd: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     fontWeight: '600' as const,
     lineHeight: 20,
@@ -180,7 +177,7 @@ export const typography = {
   },
 
   labelSm: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'Inter_500Medium',
     fontSize: 12,
     fontWeight: '500' as const,
     lineHeight: 16,
@@ -207,33 +204,32 @@ export const spacing = {
 // =====================================================================
 
 export const radius = {
-  sm: 8,    // chips, badges
-  md: 16,   // cards estándar
-  lg: 24,   // cards grandes, modales
-  xl: 32,   // pantalla principal del contador
-  full: 9999,  // pills, avatares
+  sm: 8,
+  md: 16,     // card
+  lg: 24,
+  xl: 32,     // icon / counter ring
+  button: 12,
+  full: 9999, // pill / avatar
 } as const;
 
 // =====================================================================
-// SOMBRAS (sutiles, nunca dramáticas)
+// SOMBRAS
 // =====================================================================
-// En React Native, las sombras se aplican distinto en iOS vs Android.
-// Estos valores están optimizados para iOS.
 
 export const shadows = {
   card: {
-    shadowColor: '#1F1D1A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,  // Android
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   elevated: {
-    shadowColor: '#1F1D1A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,  // Android
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
 } as const;
 
@@ -248,37 +244,29 @@ export const animation = {
     slow: 400,
   },
   easing: {
-    // En React Native usamos los nombres de easing de Reanimated
     standard: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
   },
 } as const;
 
 // =====================================================================
-// SEMANTIC TOKENS (mapeo de significado, no de color crudo)
+// SEMANTIC TOKENS
 // =====================================================================
-// Estos son los que SIEMPRE usan los componentes. Los componentes
-// nunca importan `palette.primary` directamente; importan `semantic.success`.
 
 export const semantic = {
   light: {
-    // Estados de misiones
-    missionMet: palette.light.primary,           // verde musgo
-    missionMissed: palette.light.outlineVariant, // gris cálido
-    missionWildcard: palette.light.secondary,    // terracota
+    missionMet: palette.light.primary,
+    missionMissed: palette.light.outlineVariant,
+    missionWildcard: palette.light.secondary,
 
-    // Datos del contador
     counterPrimary: palette.light.primary,
     counterTrack: palette.light.surfaceContainerHigh,
 
-    // Indicador de fuente de datos
     dataSourceSimulator: palette.light.secondary,
     dataSourcePedometer: palette.light.primary,
 
-    // Streak y comodín
     streakActive: palette.light.primary,
     streakWildcard: palette.light.secondary,
 
-    // Acciones destructivas (en panel de simulador)
     destructive: palette.light.tertiary,
     onDestructive: palette.light.onTertiary,
   },
@@ -329,8 +317,6 @@ export function getTheme(scheme: ColorScheme): Theme {
   };
 }
 
-// Token "default" para imports rápidos en utilidades puras
-// (NO usar en componentes; usar el hook useTheme en su lugar)
 export const tokens = {
   palette,
   typography,
