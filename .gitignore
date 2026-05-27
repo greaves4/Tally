@@ -46,3 +46,6 @@ yarn-error.*
 
 # Build artifacts
 *.tsbuildinfo
+
+# Scripts locales de demo/seed (no van al repo)
+scripts/

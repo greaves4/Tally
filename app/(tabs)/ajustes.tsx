@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Switch, View, type ViewStyle } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -10,11 +10,88 @@ import { getStepSource, type StepSourceInstance } from '@/features/steps/sources
 import { SettingsRow } from '@/components/features/settings/SettingsRow';
 import { SettingsSection } from '@/components/features/settings/SettingsSection';
 import { SimulatorButton } from '@/components/features/settings/SimulatorButton';
+import { formatLocalDate } from '@/lib/dates';
+import { upsertDailySteps, upsertMission, updateStreakState } from '@/lib/db';
+import { useMissionStore } from '@/stores/missionStore';
 
 // ─── Persistencia ────────────────────────────────────────────────────────────
 
 const STORAGE_THEME_KEY = 'tally:theme';
 const STORAGE_NOTIF_KEY = 'tally:notifications';
+
+// ─── Demo seed (solo desarrollo) ─────────────────────────────────────────────
+
+// TODO: eliminar en Sprint 7 (producción)
+const DEMO_DAYS = [
+  { daysBack: 7, steps: 3200 },
+  { daysBack: 6, steps: 7800 },
+  { daysBack: 5, steps: 5100 },
+  { daysBack: 4, steps: 9400 },
+  { daysBack: 3, steps: 2600 },
+  { daysBack: 2, steps: 8200 },
+  { daysBack: 1, steps: 6700 },
+] as const;
+
+// TODO: eliminar en Sprint 7 (producción)
+async function seedDemoData(): Promise<void> {
+  try {
+    const today = new Date();
+
+    for (const { daysBack, steps } of DEMO_DAYS) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - daysBack);
+      const date = formatLocalDate(d);
+
+      await upsertDailySteps(date, steps, 'simulated');
+
+      const completed = steps >= 5000;
+      let completedAt: string | null = null;
+      if (completed) {
+        const t = new Date(d);
+        t.setHours(23, 0, 0, 0);
+        completedAt = t.toISOString();
+      }
+
+      await upsertMission({
+        date,
+        templateId: 'total-5k',
+        title: 'Llegar a 5 000 pasos',
+        description: 'Camina lo suficiente para completar 5 000 pasos antes de medianoche.',
+        params: { type: 'TOTAL_STEPS' as const, target: 5000 },
+        completed,
+        completedAt,
+        usedWildcard: false,
+      });
+    }
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = formatLocalDate(yesterday);
+
+    const monday = new Date(today);
+    const dow = today.getDay();
+    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    const mondayStr = formatLocalDate(monday);
+
+    await updateStreakState({
+      current: 2,
+      longest: 2,
+      wildcardsAvailable: 1,
+      lastWildcardRegen: mondayStr,
+      lastEvaluatedDate: yesterdayStr,
+    });
+
+    // Re-bootstrap el store para que lea el streak actualizado de la DB.
+    // Sin esto, el store mantiene isBootstrapped=true con streakState.current=0
+    // del arranque original y la Home sigue mostrando "Sin racha".
+    await useMissionStore.getState().refresh();
+
+    Alert.alert('Demo cargada', '7 días de historial insertados.');
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    Alert.alert('Error', msg);
+  }
+}
 
 // ─── Mapeo SegmentedControl ↔ ColorSchemePreference ──────────────────────────
 
@@ -248,6 +325,12 @@ export default function AjustesScreen() {
           <SettingsRow label="Versión" value={appVersion} />
           <SettingsRow label="Fuente de pasos" value="Simulador (desarrollo)" isLast />
         </SettingsSection>
+
+        {/* TODO: eliminar en Sprint 7 (producción) */}
+        <SimulatorButton
+          label="Cargar datos demo"
+          onPress={() => { void seedDemoData(); }}
+        />
 
         {/* TODO: eliminar en Sprint 7 */}
         <Pressable
