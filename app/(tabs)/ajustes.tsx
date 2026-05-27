@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,7 +6,11 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Text } from '@/components/base/Text';
 import { useTheme, useThemeContext } from '@/design-system/useTheme';
-import { getStepSource, type StepSourceInstance } from '@/features/steps/sources';
+import {
+  getStepSource,
+  SimulatedStepSource,
+  type StepSourceInstance,
+} from '@/features/steps/sources';
 import { SettingsRow } from '@/components/features/settings/SettingsRow';
 import { SettingsSection } from '@/components/features/settings/SettingsSection';
 import { SimulatorButton } from '@/components/features/settings/SimulatorButton';
@@ -169,6 +173,22 @@ export default function AjustesScreen() {
   const { preference, setPreference } = useThemeContext();
   const insets = useSafeAreaInsets();
 
+  // Fuente activa (singleton de la factory). Su `kind` decide si los controles
+  // del simulador tienen sentido en este entorno.
+  const stepSource = useMemo(() => getStepSource(), []);
+  const isSimulated = stepSource.kind === 'simulated';
+
+  // Fuente concreta para los botones de debug. Normalmente es el mismo singleton
+  // (un SimulatedStepSource en Expo Go/desarrollo). Si la factory devolvió una
+  // implementación sin `addSteps` —no debería tras el fix del factory— caemos a
+  // un SimulatedStepSource directo en vez de castear y crashear al presionar.
+  const simulatorSource = useMemo<StepSourceInstance>(() => {
+    if (typeof (stepSource as Partial<StepSourceInstance>).addSteps === 'function') {
+      return stepSource as StepSourceInstance;
+    }
+    return new SimulatedStepSource();
+  }, [stepSource]);
+
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoaded, setNotifLoaded] = useState(false);
 
@@ -217,7 +237,7 @@ export default function AjustesScreen() {
   }
 
   function addSteps(amount: number): void {
-    void (getStepSource() as StepSourceInstance).addSteps(amount);
+    void simulatorSource.addSteps(amount);
   }
 
   const appVersion = Constants.expoConfig?.version ?? '—';
@@ -302,28 +322,41 @@ export default function AjustesScreen() {
 
         {/* ── Simulador ── */}
         <SettingsSection title="Simulador">
-          <SettingsRow label="Fuente de datos" value="Simulado" isLast />
+          <SettingsRow
+            label="Fuente de datos"
+            value={isSimulated ? 'Simulado' : 'Pedómetro'}
+            isLast
+          />
         </SettingsSection>
 
-        <View style={{ gap: theme.spacing.sm }}>
-          <SimulatorButton
-            label="Simular caminata corta (+500 pasos)"
-            onPress={() => addSteps(500)}
-          />
-          <SimulatorButton
-            label="Simular caminata larga (+2000 pasos)"
-            onPress={() => addSteps(2000)}
-          />
-          <SimulatorButton
-            label="Simular día completo (+8000 pasos)"
-            onPress={() => addSteps(8000)}
-          />
-        </View>
+        {/* Los botones de simulación solo tienen sentido con la fuente simulada
+            (Expo Go / desarrollo). Con el Pedómetro real no hay nada que inyectar,
+            así que se ocultan. */}
+        {isSimulated && (
+          <View style={{ gap: theme.spacing.sm }}>
+            <SimulatorButton
+              label="Simular caminata corta (+500 pasos)"
+              onPress={() => addSteps(500)}
+            />
+            <SimulatorButton
+              label="Simular caminata larga (+2000 pasos)"
+              onPress={() => addSteps(2000)}
+            />
+            <SimulatorButton
+              label="Simular día completo (+8000 pasos)"
+              onPress={() => addSteps(8000)}
+            />
+          </View>
+        )}
 
         {/* ── Acerca de ── */}
         <SettingsSection title="Acerca de">
           <SettingsRow label="Versión" value={appVersion} />
-          <SettingsRow label="Fuente de pasos" value="Simulador (desarrollo)" isLast />
+          <SettingsRow
+            label="Fuente de pasos"
+            value={isSimulated ? 'Simulador (desarrollo)' : 'Pedómetro (dispositivo)'}
+            isLast
+          />
         </SettingsSection>
 
         {/* TODO: eliminar en Sprint 7 (producción) */}
@@ -333,16 +366,18 @@ export default function AjustesScreen() {
         />
 
         {/* TODO: eliminar en Sprint 7 */}
-        <Pressable
-          style={({ pressed }) => [debugButtonStyle, pressed && { opacity: 0.7 }]}
-          onPress={() => addSteps(1000)}
-          accessibilityRole="button"
-          accessibilityLabel="Agregar 1000 pasos de debug"
-        >
-          <Text variant="labelMd" color="onDestructive">
-            DEBUG: +1000 pasos
-          </Text>
-        </Pressable>
+        {isSimulated && (
+          <Pressable
+            style={({ pressed }) => [debugButtonStyle, pressed && { opacity: 0.7 }]}
+            onPress={() => addSteps(1000)}
+            accessibilityRole="button"
+            accessibilityLabel="Agregar 1000 pasos de debug"
+          >
+            <Text variant="labelMd" color="onDestructive">
+              DEBUG: +1000 pasos
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
     </View>
   );
