@@ -259,16 +259,6 @@ export default function AjustesScreen() {
     gap: theme.spacing.lg,
   };
 
-  const debugButtonStyle: ViewStyle = {
-    marginTop: theme.spacing.xxl,
-    backgroundColor: theme.semantic.destructive,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-  };
-
   return (
     <View style={screenStyle}>
       <View style={headerStyle}>
@@ -364,19 +354,6 @@ export default function AjustesScreen() {
           onPress={() => { void seedDemoData(); }}
         />
 
-        {/* TODO: eliminar en Sprint 7 */}
-        {isSimulated && (
-          <Pressable
-            style={({ pressed }) => [debugButtonStyle, pressed && { opacity: 0.7 }]}
-            onPress={() => addSteps(1000)}
-            accessibilityRole="button"
-            accessibilityLabel="Agregar 1000 pasos de debug"
-          >
-            <Text variant="labelMd" color="onDestructive">
-              DEBUG: +1000 pasos
-            </Text>
-          </Pressable>
-        )}
       </ScrollView>
     </View>
   );
