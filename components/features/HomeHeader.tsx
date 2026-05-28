@@ -57,7 +57,7 @@ export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.md,
-    flexShrink: 1,
+    flex: 1,
   };
 
   const avatarStyle: ViewStyle = {
@@ -76,11 +76,11 @@ export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled,
   const rightRowStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: 0,
   };
 
   const iconPressableStyle: ViewStyle = {
-    minWidth: BELL_TOUCH_TARGET,
+    width: 36,
     minHeight: BELL_TOUCH_TARGET,
     alignItems: 'center',
     justifyContent: 'center',

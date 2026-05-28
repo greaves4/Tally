@@ -48,10 +48,12 @@ function createStepSource(): StepSource {
   // require() lazy para evitar que el módulo nativo se evalúe en Expo Go.
   if (Platform.OS === 'ios') {
     try {
+      console.log('[Factory] attempting HealthKit');
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = require('./HealthKitStepSource') as typeof import('./HealthKitStepSource');
       return new mod.HealthKitStepSource();
-    } catch {
+    } catch (error) {
+      console.log('[Factory] HealthKit error:', error);
       return new PedometerStepSource();
     }
   }
