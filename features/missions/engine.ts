@@ -193,8 +193,15 @@ export async function buildDayData(date: string): Promise<DayData> {
     getSimulatorStepEventsForRange(from, to),
   ]);
 
-  const totalSteps = dailyRecord?.steps ?? 0;
+  // Para SimulatedStepSource los pasos viven en simulator_steps (events).
+  // Para HealthKit/Pedómetro no hay events (tabla vacía) y usamos daily_steps.
+  const totalStepsFromEvents = events.reduce((sum, e) => sum + e.amount, 0);
+  const totalSteps = totalStepsFromEvents > 0
+    ? totalStepsFromEvents
+    : (dailyRecord?.steps ?? 0);
   const stepsByHour = bucketizeByHour(events);
+
+  console.log('[buildDayData]', date, 'totalSteps:', totalSteps, 'fromEvents:', totalStepsFromEvents, 'fromDaily:', dailyRecord?.steps ?? 0);
 
   return {
     date,

@@ -17,7 +17,6 @@
 import { Platform } from 'react-native';
 import Constants, { AppOwnership } from 'expo-constants';
 
-import { HealthKitStepSource } from './HealthKitStepSource';
 import { PedometerStepSource } from './PedometerStepSource';
 import { SimulatedStepSource } from './SimulatedStepSource';
 import type { StepSource } from './StepSource';
@@ -46,8 +45,15 @@ function createStepSource(): StepSource {
     return new SimulatedStepSource();
   }
   // Build nativo iOS: HealthKit tiene prioridad (acceso completo al historial del día).
+  // require() lazy para evitar que el módulo nativo se evalúe en Expo Go.
   if (Platform.OS === 'ios') {
-    return new HealthKitStepSource();
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./HealthKitStepSource') as typeof import('./HealthKitStepSource');
+      return new mod.HealthKitStepSource();
+    } catch {
+      return new PedometerStepSource();
+    }
   }
   // Build nativo Android: Pedómetro (HealthKit no existe en Android).
   if (Platform.OS === 'android') {

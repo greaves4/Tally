@@ -373,6 +373,18 @@ export async function getSimulatorStepEventsForRange(
   }));
 }
 
+/**
+ * Elimina todos los registros de `simulator_steps` con timestamp >= `from`.
+ * Usado por el botón de reset del simulador para borrar los pasos del día actual.
+ */
+export async function deleteSimulatorStepsSince(from: Date): Promise<void> {
+  const db = await openDb();
+  await db.runAsync(
+    `DELETE FROM simulator_steps WHERE timestamp >= ?`,
+    [from.toISOString()],
+  );
+}
+
 // =============================================================================
 // Tipos internos: misiones y streak
 // =============================================================================
@@ -627,6 +639,21 @@ export async function markMissionCompleted(
      WHERE date = ?`,
     [completedAt, usedWildcard ? 1 : 0, date],
   );
+}
+
+/**
+ * Resetea la misión de `date` a estado pendiente (completed=0, completed_at=NULL).
+ * Usado por el botón de reset del simulador para poder volver a completar la
+ * misión del día tras resetear los pasos.
+ */
+export async function resetMissionForDate(date: string): Promise<void> {
+  console.log('[resetMission] resetting mission for', date);
+  const db = await openDb();
+  await db.runAsync(
+    `UPDATE missions_daily SET completed = 0, completed_at = NULL WHERE date = ?`,
+    [date],
+  );
+  console.log('[resetMission] done');
 }
 
 /**

@@ -1,8 +1,16 @@
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, View, type ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+} from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/base/Text';
 import { BalanceStrip } from '@/components/features/BalanceStrip';
+import { CelebrationOverlay } from '@/components/features/CelebrationOverlay';
 import { DataSourceIndicator } from '@/components/features/DataSourceIndicator';
 import { HomeHeader } from '@/components/features/HomeHeader';
 import { MissionCard } from '@/components/features/MissionCard';
@@ -78,7 +86,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   useDailyStepReset();
   const { stepsToday, source, isReady: stepsReady } = useStepsToday();
-  const { status: debtStatus, balance: debtBalance, effectiveGoalToday } = useStepDebt();
+  const { status: debtStatus, balance: debtBalance, effectiveGoalToday } = useStepDebt(stepsToday);
   const {
     todayMission,
     progress: missionProgress,
@@ -86,6 +94,55 @@ export default function HomeScreen() {
     streakState,
     isReady: missionReady,
   } = useDailyMission();
+
+  // ── Celebración ────────────────────────────────────────────────────────────
+  const [celebrating, setCelebrating] = useState(false);
+  // Trackea el templateId + estado completado de la misión vista por última vez.
+  // Celebrar solo cuando el MISMO templateId pasa de !completed → completed,
+  // lo que evita disparar la animación al arranque si la misión ya estaba lista.
+  const prevMissionRef = useRef<{ templateId: string | null; completed: boolean }>({
+    templateId: null,
+    completed: false,
+  });
+  const ringScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (!missionReady) return;
+
+    const templateId = todayMission?.templateId ?? null;
+    const prev = prevMissionRef.current;
+
+    console.log('[Celebration] isCompleted:', isCompleted, 'templateId:', templateId, 'prevCompleted:', prev.completed, 'prevTemplateId:', prev.templateId);
+
+    if (prev.templateId === null) {
+      // Primera vez que el hook carga: inicializar sin celebrar.
+      prevMissionRef.current = { templateId, completed: isCompleted };
+      return;
+    }
+
+    if (templateId === prev.templateId && !prev.completed && isCompleted) {
+      console.log('[Celebration] FIRING');
+      prevMissionRef.current = { templateId, completed: true };
+      setCelebrating(true);
+      const timer = setTimeout(() => setCelebrating(false), 2500);
+      return () => clearTimeout(timer);
+    }
+
+    prevMissionRef.current = { templateId, completed: isCompleted };
+  }, [isCompleted, missionReady, todayMission]);
+
+  useEffect(() => {
+    if (celebrating) {
+      ringScale.value = withSequence(
+        withSpring(1.08, { damping: 20, stiffness: 400 }),
+        withSpring(1, { damping: 10, stiffness: 150 }),
+      );
+    }
+  }, [celebrating, ringScale]);
+
+  const ringAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ringScale.value }],
+  }));
 
   // Mientras la misión no esté lista, el anillo refleja pasos crudos contra
   // GOAL_STEPS. Cuando la misión carga, los valores reales toman efecto.
@@ -149,7 +206,7 @@ export default function HomeScreen() {
           <WildcardBadge wildcardsAvailable={streakState.wildcardsAvailable} />
         </View>
 
-        <View style={ringSectionStyle}>
+        <Animated.View style={[ringSectionStyle, ringAnimatedStyle]}>
           <DataSourceIndicator source={source} />
           <ProgressRing currentSteps={ringCurrent} goalSteps={ringGoal}>
             <Text variant="displayHeroMobile" color="counterPrimary">
@@ -159,7 +216,7 @@ export default function HomeScreen() {
               PASOS
             </Text>
           </ProgressRing>
-        </View>
+        </Animated.View>
 
         <BalanceStrip
           kind={debtStatus}
@@ -192,6 +249,7 @@ export default function HomeScreen() {
           />
         </View>
       </ScrollView>
+      <CelebrationOverlay celebrating={celebrating} />
     </View>
   );
 }

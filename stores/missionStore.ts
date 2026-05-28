@@ -360,12 +360,17 @@ export const useMissionStore = create<MissionStoreState>()((set, get) => ({
  * para que dos deltas concurrentes no dupliquen el incremento.
  */
 async function recomputeFromDbInternal(): Promise<void> {
-  const state = useMissionStore.getState();
-  const { todayStr, todayMission, hasAutoCompleted } = state;
+  const initial = useMissionStore.getState();
+  const { todayStr, todayMission } = initial;
   if (todayStr === null || todayMission === null) return;
 
   const dayData = await buildDayData(todayStr);
+
+  // Re-leer el store tras el await: refresh() puede haber corrido mientras
+  // esperábamos a SQLite, cambiando hasAutoCompleted de true a false.
+  const { hasAutoCompleted } = useMissionStore.getState();
   const prog = computeProgress(todayMission.params, dayData);
+  console.log('[recompute] totalSteps:', dayData.totalSteps, 'progress:', prog, 'hasAutoCompleted:', hasAutoCompleted);
   useMissionStore.setState({ progress: prog });
 
   if (hasAutoCompleted) {
@@ -374,6 +379,7 @@ async function recomputeFromDbInternal(): Promise<void> {
   }
 
   const { completed, streak } = await runAutoComplete(todayStr, todayMission);
+  console.log('[recompute] autoComplete result:', completed);
   if (completed) {
     useMissionStore.setState({
       hasAutoCompleted: true,
@@ -413,9 +419,12 @@ async function runAutoComplete(
       return { completed: true, streak: await getStreakState() };
     }
     const dayData = await buildDayData(todayStr);
-    if (!mission.evaluate(dayData)) {
+    const evaluateResult = mission.evaluate(dayData);
+    console.log('[autoComplete] evaluate:', evaluateResult, 'totalSteps:', dayData.totalSteps, 'params:', JSON.stringify(mission.params));
+    if (!evaluateResult) {
       return { completed: false, streak: await getStreakState() };
     }
+    console.log('[autoComplete] MARKING COMPLETED');
     await markMissionCompleted(todayStr, false);
     const current = await getStreakState();
     const newCurrent = current.current + 1;

@@ -14,8 +14,9 @@ import {
 import { SettingsRow } from '@/components/features/settings/SettingsRow';
 import { SettingsSection } from '@/components/features/settings/SettingsSection';
 import { SimulatorButton } from '@/components/features/settings/SimulatorButton';
-import { formatLocalDate } from '@/lib/dates';
-import { upsertDailySteps, upsertMission, updateStreakState } from '@/lib/db';
+import { formatLocalDate, getStartOfDay } from '@/lib/dates';
+import { upsertDailySteps, upsertMission, updateStreakState, upsertStepDebt, resetMissionForDate } from '@/lib/db';
+import { useDebtStore } from '@/stores/debtStore';
 import { useMissionStore } from '@/stores/missionStore';
 
 // ─── Persistencia ────────────────────────────────────────────────────────────
@@ -35,6 +36,35 @@ const DEMO_DAYS = [
   { daysBack: 2, steps: 8200 },
   { daysBack: 1, steps: 6700 },
 ] as const;
+
+// TODO: eliminar en producción
+async function resetBalance(): Promise<void> {
+  try {
+    const today = formatLocalDate(new Date());
+    await upsertStepDebt(0, today);
+    useDebtStore.getState().setBalance(0);
+    Alert.alert('Balance reseteado', 'La deuda acumulada vuelve a 0.');
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    Alert.alert('Error', msg);
+  }
+}
+
+// TODO: eliminar en producción
+async function resetTodaySteps(): Promise<void> {
+  try {
+    const source = getStepSource();
+    if (source instanceof SimulatedStepSource) {
+      await source.resetTodaySteps(getStartOfDay(new Date()));
+    }
+    await resetMissionForDate(formatLocalDate(new Date()));
+    await useMissionStore.getState().refresh();
+    Alert.alert('Pasos reseteados', 'El contador vuelve a 0.');
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    Alert.alert('Error', msg);
+  }
+}
 
 // TODO: eliminar en Sprint 7 (producción)
 async function seedDemoData(): Promise<void> {
@@ -338,6 +368,14 @@ export default function AjustesScreen() {
             <SimulatorButton
               label="Simular día completo (+8000 pasos)"
               onPress={() => addSteps(8000)}
+            />
+            <SimulatorButton
+              label="Resetear pasos de hoy"
+              onPress={() => { void resetTodaySteps(); }}
+            />
+            <SimulatorButton
+              label="Resetear balance acumulado"
+              onPress={() => { void resetBalance(); }}
             />
           </View>
         )}

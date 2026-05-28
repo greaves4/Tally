@@ -20,6 +20,7 @@
 import {
   getSimulatorStepsForRange,
   recordSimulatorSteps,
+  deleteSimulatorStepsSince,
 } from '@/lib/db';
 import type {
   PermissionStatus,
@@ -125,6 +126,19 @@ export class SimulatedStepSource implements StepSource {
         console.warn('[SimulatedStepSource] addSteps en auto-walk falló.', error);
       });
     }, intervalMs);
+  }
+
+  /**
+   * Borra todos los pasos registrados desde `startOfDay` y notifica a los
+   * listeners con un delta negativo igual al total eliminado, de modo que
+   * `useStepsToday` actualice su estado a 0 sin necesidad de re-montar.
+   */
+  async resetTodaySteps(startOfDay: Date): Promise<void> {
+    const total = await getSimulatorStepsForRange(startOfDay, new Date());
+    await deleteSimulatorStepsSince(startOfDay);
+    if (total > 0) {
+      this.notifyListeners(-total);
+    }
   }
 
   /**

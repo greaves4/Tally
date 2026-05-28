@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
-import { getStepDebt } from '@/lib/db';
 import {
   DEFAULT_DAILY_GOAL,
+  updateBalance,
   balanceStatus,
   effectiveGoal,
   type BalanceKind,
 } from '@/lib/stepDebt';
+import { useDebtStore } from '@/stores/debtStore';
 
 const DAILY_GOAL = DEFAULT_DAILY_GOAL;
 
@@ -18,41 +19,32 @@ export type UseStepDebtResult = {
   effectiveGoalToday: number;
 };
 
-export function useStepDebt(): UseStepDebtResult {
-  const [balance, setBalance] = useState(0);
+export function useStepDebt(stepsToday: number): UseStepDebtResult {
+  const storedBalance = useDebtStore((s) => s.balance);
+  const loadBalance = useDebtStore((s) => s.loadBalance);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function load(): Promise<void> {
-      try {
-        const record = await getStepDebt();
-        if (isMounted && record !== null) {
-          setBalance(record.balance);
-        }
-      } catch (e) {
-        console.warn('[useStepDebt] load failed:', e);
-      }
-    }
-
-    void load();
+    void loadBalance();
 
     const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
-      if (state === 'active') void load();
+      if (state === 'active') void loadBalance();
     });
 
-    return () => {
-      isMounted = false;
-      sub.remove();
-    };
-  }, []);
+    return () => { sub.remove(); };
+  }, [loadBalance]);
 
-  const { kind, label } = balanceStatus(balance);
+  const projected = updateBalance(stepsToday, DAILY_GOAL, storedBalance);
+  console.log('[StepDebt] stored:', storedBalance, 'projected:', projected, 'steps:', stepsToday);
+
+  // Si el usuario aún no caminó nada hoy, no tiene sentido mostrar deuda
+  // proyectada: solo exponemos crédito acumulado (si lo hay) o "Al día".
+  const displayBalance = stepsToday === 0 ? Math.max(storedBalance, 0) : projected;
+  const { kind, label } = balanceStatus(displayBalance);
 
   return {
-    balance,
+    balance: displayBalance,
     status: kind,
     label,
-    effectiveGoalToday: effectiveGoal(DAILY_GOAL, balance),
+    effectiveGoalToday: effectiveGoal(DAILY_GOAL, displayBalance),
   };
 }
