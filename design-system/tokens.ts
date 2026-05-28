@@ -16,56 +16,56 @@
 
 export const palette = {
   light: {
-    // Surfaces
-    surface: '#1E1E1E',
-    surfaceDim: '#151515',
-    surfaceBright: '#2C2C2C',
-    surfaceContainerLowest: '#0D0D0D',
-    surfaceContainerLow: '#151515',
-    surfaceContainer: '#1A1A1A',
-    surfaceContainerHigh: '#252525',
-    surfaceContainerHighest: '#2C2C2C',
+    // Surfaces — paleta cálida crema/blanco
+    surface: '#FFFFFF',
+    surfaceDim: '#EAE6DE',
+    surfaceBright: '#FFFFFF',
+    surfaceContainerLowest: '#FDFCFA',
+    surfaceContainerLow: '#F4F1EB',
+    surfaceContainer: '#EDE9E1',
+    surfaceContainerHigh: '#E5E0D7',
+    surfaceContainerHighest: '#DDD7CC',
 
     // On-surface
-    onSurface: '#F4F4F1',
-    onSurfaceVariant: '#888888',
+    onSurface: '#1A1A1A',
+    onSurfaceVariant: '#8A7E6E',
 
     // Inverso
-    inverseSurface: '#F4F4F1',
-    inverseOnSurface: '#1E1E1E',
+    inverseSurface: '#1E1E1E',
+    inverseOnSurface: '#F4F4F1',
     inversePrimary: '#C5F04A',
 
     // Outline
-    outline: '#666666',
-    outlineVariant: '#222222',
+    outline: '#8A7E6E',
+    outlineVariant: '#E0D9CE',
 
-    // Primary — Accent Lime
-    primary: '#C5F04A',
-    onPrimary: '#0A0A0A',
-    primaryContainer: '#D8F77D',
-    onPrimaryContainer: '#0A0A0A',
+    // Primary — verde bosque
+    primary: '#3D6B1E',
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#D4E8BC',
+    onPrimaryContainer: '#1A3A08',
 
-    // Secondary — Muted
-    secondary: '#888888',
-    onSecondary: '#F4F4F1',
-    secondaryContainer: '#252525',
-    onSecondaryContainer: '#F4F4F1',
+    // Secondary — tierra cálida
+    secondary: '#8A7E6E',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#EDE3D6',
+    onSecondaryContainer: '#3D3020',
 
-    // Tertiary — Terracota (acciones destructivas)
-    tertiary: '#983A31',
+    // Tertiary — terracota (acciones destructivas)
+    tertiary: '#C4622D',
     onTertiary: '#FFFFFF',
-    tertiaryContainer: '#B85247',
-    onTertiaryContainer: '#FFF6F4',
+    tertiaryContainer: '#FAD5B8',
+    onTertiaryContainer: '#5C1A00',
 
     // Error
-    error: '#CF6679',
+    error: '#B5363B',
     onError: '#FFFFFF',
-    errorContainer: '#5C0000',
-    onErrorContainer: '#FFDAD6',
+    errorContainer: '#FFDAD6',
+    onErrorContainer: '#410002',
 
     // Background
-    background: '#151515',
-    onBackground: '#F4F4F1',
+    background: '#F4F1EB',
+    onBackground: '#1A1A1A',
   },
 
   dark: {
