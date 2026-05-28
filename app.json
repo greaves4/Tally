@@ -18,6 +18,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "Tally lee tus pasos para mostrar tu progreso y calcular tu deuda de pasos."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true
       }
     },
     "android": {
