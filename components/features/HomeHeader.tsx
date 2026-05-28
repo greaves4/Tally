@@ -1,5 +1,5 @@
 import { Pressable, View, type ViewStyle } from 'react-native';
-import { Bell, Share2 } from 'lucide-react-native';
+import { Bell, Share2, Swords } from 'lucide-react-native';
 import { Svg, Line } from 'react-native-svg';
 import { Text } from '@/components/base/Text';
 import { useTheme } from '@/design-system/useTheme';
@@ -14,6 +14,7 @@ export type HomeHeaderProps = {
   currentDate: Date;
   onSharePress?: () => void;
   shareDisabled?: boolean;
+  onChallengePress?: () => void;
 };
 
 function formatLocalizedDate(date: Date): string {
@@ -39,7 +40,7 @@ function TallyIcon({ size, color }: { size: number; color: string }) {
   );
 }
 
-export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled }: HomeHeaderProps) {
+export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled, onChallengePress }: HomeHeaderProps) {
   const theme = useTheme();
 
   const formattedDate = formatLocalizedDate(currentDate);
@@ -108,6 +109,20 @@ export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled 
       </View>
 
       <View style={rightRowStyle}>
+        {onChallengePress !== undefined && (
+          <Pressable
+            onPress={onChallengePress}
+            accessibilityRole="button"
+            accessibilityLabel="Modo Reto"
+            hitSlop={BELL_HIT_SLOP}
+            style={({ pressed }) => [
+              iconPressableStyle,
+              pressed ? { opacity: 0.5 } : null,
+            ]}
+          >
+            <Swords size={BELL_ICON_SIZE} color={theme.colors.onSurfaceVariant} />
+          </Pressable>
+        )}
         {onSharePress !== undefined && (
           <Pressable
             onPress={onSharePress}

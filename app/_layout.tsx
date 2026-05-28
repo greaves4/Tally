@@ -69,7 +69,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="challenge" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="mission-details" options={{ presentation: 'modal' }} />
+        </Stack>
       </ThemeProvider>
     </SafeAreaProvider>
   );

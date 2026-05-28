@@ -222,6 +222,7 @@ export default function HomeScreen() {
         <HomeHeader
           userName={USER_NAME}
           currentDate={new Date()}
+          onChallengePress={() => router.push('/challenge')}
           onSharePress={() => { void handleSharePress(); }}
           shareDisabled={isSharing}
         />
