@@ -42,8 +42,11 @@ import { formatLocalDate, getStartOfDay } from '@/lib/dates';
 import {
   getLastDailyRecord,
   upsertDailySteps,
+  getStepDebt,
+  upsertStepDebt,
   type SourceType,
 } from '@/lib/db';
+import { updateBalance, DEFAULT_DAILY_GOAL } from '@/lib/stepDebt';
 
 // La factory decide qué implementación está activa; leer de ella para que el
 // SourceType en daily_steps refleje si los pasos vienen del Pedómetro real o del simulador.
@@ -94,6 +97,18 @@ export function useDailyStepReset(): UseDailyStepResetResult {
         if (lastRecord !== null && lastRecord.date === today) {
           return;
         }
+
+        // Día nuevo: actualizar balance de deuda con los pasos del día que
+        // acaba de terminar (lastRecord). Si no hay registro previo (primera
+        // apertura), no hay deuda que calcular.
+        if (lastRecord !== null) {
+          const prevDebt = await getStepDebt();
+          const prevBalance = prevDebt?.balance ?? 0;
+          const newBalance = updateBalance(lastRecord.steps, DEFAULT_DAILY_GOAL, prevBalance);
+          await upsertStepDebt(newBalance, today);
+        }
+
+        if (!isMounted) return;
 
         // Día nuevo (o primera apertura): leemos el conteo del día de hoy
         // desde el source. Para `SimulatedStepSource` esto suma los eventos

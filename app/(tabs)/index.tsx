@@ -2,6 +2,7 @@ import { ScrollView, View, type ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/base/Text';
+import { BalanceStrip } from '@/components/features/BalanceStrip';
 import { DataSourceIndicator } from '@/components/features/DataSourceIndicator';
 import { HomeHeader } from '@/components/features/HomeHeader';
 import { MissionCard } from '@/components/features/MissionCard';
@@ -11,6 +12,7 @@ import { WildcardBadge } from '@/components/features/WildcardBadge';
 import { useTheme } from '@/design-system/useTheme';
 import { useDailyMission } from '@/hooks/useDailyMission';
 import { useDailyStepReset } from '@/hooks/useDailyStepReset';
+import { useStepDebt } from '@/hooks/useStepDebt';
 import { useStepsToday } from '@/hooks/useStepsToday';
 import type { MissionParams } from '@/features/missions/types';
 
@@ -76,6 +78,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   useDailyStepReset();
   const { stepsToday, source, isReady: stepsReady } = useStepsToday();
+  const { status: debtStatus, balance: debtBalance, effectiveGoalToday } = useStepDebt();
   const {
     todayMission,
     progress: missionProgress,
@@ -157,6 +160,12 @@ export default function HomeScreen() {
             </Text>
           </ProgressRing>
         </View>
+
+        <BalanceStrip
+          kind={debtStatus}
+          balance={debtBalance}
+          effectiveGoalToday={effectiveGoalToday}
+        />
 
         <View style={metricsRowStyle}>
           <View style={metricStyle}>

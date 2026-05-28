@@ -111,6 +111,12 @@ const SCHEMA_SQL = `
     last_wildcard_regen TEXT,
     last_evaluated_date TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS step_debt (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    balance INTEGER NOT NULL DEFAULT 0,
+    last_updated TEXT NOT NULL
+  );
 `;
 
 // =============================================================================
@@ -698,6 +704,16 @@ export async function getStreakState(): Promise<StreakState> {
   return STREAK_INITIAL;
 }
 
+// =============================================================================
+// Tipos internos: deuda de pasos
+// =============================================================================
+
+type StepDebtRow = {
+  id: number;
+  balance: number;
+  last_updated: string;
+};
+
 /**
  * Actualiza el estado del streak. Hace upsert sobre la row `id=1`: si por
  * algún motivo no existiera (no debería tras `getStreakState`), se crea.
@@ -723,5 +739,40 @@ export async function updateStreakState(state: StreakState): Promise<void> {
       state.lastWildcardRegen,
       state.lastEvaluatedDate,
     ],
+  );
+}
+
+// =============================================================================
+// API pública: deuda de pasos (singleton row con id=1)
+// =============================================================================
+
+/**
+ * Devuelve el balance acumulado de pasos, o `null` si nunca se ha calculado
+ * (primera instalación, sin días completados todavía).
+ */
+export async function getStepDebt(): Promise<{ balance: number; lastUpdated: string } | null> {
+  const db = await openDb();
+  const row = await db.getFirstAsync<StepDebtRow>(
+    `SELECT id, balance, last_updated FROM step_debt WHERE id = 1`,
+  );
+  if (row === null) return null;
+  return { balance: row.balance, lastUpdated: row.last_updated };
+}
+
+/**
+ * Inserta o actualiza el balance acumulado. Idempotente sobre `id=1`.
+ *
+ * @param balance Nuevo balance (positivo = crédito, negativo = deuda).
+ * @param date Fecha local 'YYYY-MM-DD' del último cálculo (usar `formatLocalDate`).
+ */
+export async function upsertStepDebt(balance: number, date: string): Promise<void> {
+  const db = await openDb();
+  await db.runAsync(
+    `INSERT INTO step_debt (id, balance, last_updated)
+     VALUES (1, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       balance = excluded.balance,
+       last_updated = excluded.last_updated`,
+    [balance, date],
   );
 }
