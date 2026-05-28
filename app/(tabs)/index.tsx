@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, View, type ViewStyle } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/base/Text';
 import { BalanceStrip } from '@/components/features/BalanceStrip';
 import { CelebrationOverlay } from '@/components/features/CelebrationOverlay';
+import { ShareCard } from '@/components/features/ShareCard';
 import { DataSourceIndicator } from '@/components/features/DataSourceIndicator';
 import { HomeHeader } from '@/components/features/HomeHeader';
 import { MissionCard } from '@/components/features/MissionCard';
@@ -94,6 +97,23 @@ export default function HomeScreen() {
     streakState,
     isReady: missionReady,
   } = useDailyMission();
+
+  // ── Compartir ───────────────────────────────────────────────────────────────
+  const shareCardRef = useRef<View>(null);
+  const [isSharing, setIsSharing] = useState(false);
+
+  const handleSharePress = async (): Promise<void> => {
+    if (isSharing || !shareCardRef.current) return;
+    setIsSharing(true);
+    try {
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png' });
+    } catch (e) {
+      console.warn('[share] failed:', e);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   // ── Celebración ────────────────────────────────────────────────────────────
   const [celebrating, setCelebrating] = useState(false);
@@ -199,7 +219,12 @@ export default function HomeScreen() {
   return (
     <View style={screenStyle}>
       <ScrollView contentContainerStyle={contentStyle}>
-        <HomeHeader userName={USER_NAME} currentDate={new Date()} />
+        <HomeHeader
+          userName={USER_NAME}
+          currentDate={new Date()}
+          onSharePress={() => { void handleSharePress(); }}
+          shareDisabled={isSharing}
+        />
 
         <View style={badgesRowStyle}>
           <StreakBadge streakCount={streakState.current} />
@@ -250,6 +275,22 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
       <CelebrationOverlay celebrating={celebrating} />
+
+      {/* ShareCard fuera de pantalla: solo se renderiza para captura con ViewShot */}
+      <View
+        ref={shareCardRef}
+        collapsable={false}
+        style={{ position: 'absolute', top: -10000, left: 0, pointerEvents: 'none' }}
+      >
+        <ShareCard
+          stepsToday={stepsToday}
+          missionTitle={missionTitle}
+          isCompleted={isCompleted}
+          progress={missionProgress}
+          streakCount={streakState.current}
+          date={new Date()}
+        />
+      </View>
     </View>
   );
 }

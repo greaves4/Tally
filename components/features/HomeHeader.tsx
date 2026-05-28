@@ -1,5 +1,5 @@
 import { Pressable, View, type ViewStyle } from 'react-native';
-import { Bell } from 'lucide-react-native';
+import { Bell, Share2 } from 'lucide-react-native';
 import { Svg, Line } from 'react-native-svg';
 import { Text } from '@/components/base/Text';
 import { useTheme } from '@/design-system/useTheme';
@@ -12,6 +12,8 @@ const BELL_HIT_SLOP = (BELL_TOUCH_TARGET - BELL_ICON_SIZE) / 2;
 export type HomeHeaderProps = {
   userName: string;
   currentDate: Date;
+  onSharePress?: () => void;
+  shareDisabled?: boolean;
 };
 
 function formatLocalizedDate(date: Date): string {
@@ -37,7 +39,7 @@ function TallyIcon({ size, color }: { size: number; color: string }) {
   );
 }
 
-export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
+export function HomeHeader({ userName, currentDate, onSharePress, shareDisabled }: HomeHeaderProps) {
   const theme = useTheme();
 
   const formattedDate = formatLocalizedDate(currentDate);
@@ -70,7 +72,13 @@ export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
     flexShrink: 1,
   };
 
-  const bellPressableStyle: ViewStyle = {
+  const rightRowStyle: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  };
+
+  const iconPressableStyle: ViewStyle = {
     minWidth: BELL_TOUCH_TARGET,
     minHeight: BELL_TOUCH_TARGET,
     alignItems: 'center',
@@ -99,15 +107,32 @@ export function HomeHeader({ userName, currentDate }: HomeHeaderProps) {
         </View>
       </View>
 
-      <Pressable
-        onPress={handleBellPress}
-        accessibilityRole="button"
-        accessibilityLabel="Notificaciones"
-        hitSlop={BELL_HIT_SLOP}
-        style={bellPressableStyle}
-      >
-        <Bell size={BELL_ICON_SIZE} color={theme.colors.onSurfaceVariant} />
-      </Pressable>
+      <View style={rightRowStyle}>
+        {onSharePress !== undefined && (
+          <Pressable
+            onPress={onSharePress}
+            disabled={shareDisabled}
+            accessibilityRole="button"
+            accessibilityLabel="Compartir progreso"
+            hitSlop={BELL_HIT_SLOP}
+            style={({ pressed }) => [
+              iconPressableStyle,
+              (pressed || shareDisabled) ? { opacity: 0.5 } : null,
+            ]}
+          >
+            <Share2 size={BELL_ICON_SIZE} color={theme.colors.onSurfaceVariant} />
+          </Pressable>
+        )}
+        <Pressable
+          onPress={handleBellPress}
+          accessibilityRole="button"
+          accessibilityLabel="Notificaciones"
+          hitSlop={BELL_HIT_SLOP}
+          style={iconPressableStyle}
+        >
+          <Bell size={BELL_ICON_SIZE} color={theme.colors.onSurfaceVariant} />
+        </Pressable>
+      </View>
     </View>
   );
 }
