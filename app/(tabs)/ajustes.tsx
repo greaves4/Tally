@@ -175,19 +175,18 @@ export default function AjustesScreen() {
 
   // Fuente activa (singleton de la factory). Su `kind` decide si los controles
   // del simulador tienen sentido en este entorno.
-  const stepSource = useMemo(() => getStepSource(), []);
-  const isSimulated = stepSource.kind === 'simulated';
+  // Llamada directa al singleton — no useMemo para evitar cachés de módulo
+  // que en Expo Go pueden capturar el valor antes de que __DEV__ resuelva.
+  const isSimulated = getStepSource().kind === 'simulated';
 
-  // Fuente concreta para los botones de debug. Normalmente es el mismo singleton
-  // (un SimulatedStepSource en Expo Go/desarrollo). Si la factory devolvió una
-  // implementación sin `addSteps` —no debería tras el fix del factory— caemos a
-  // un SimulatedStepSource directo en vez de castear y crashear al presionar.
+  // Fuente concreta para los botones de debug.
   const simulatorSource = useMemo<StepSourceInstance>(() => {
-    if (typeof (stepSource as Partial<StepSourceInstance>).addSteps === 'function') {
-      return stepSource as StepSourceInstance;
+    const source = getStepSource();
+    if (typeof (source as Partial<StepSourceInstance>).addSteps === 'function') {
+      return source as StepSourceInstance;
     }
     return new SimulatedStepSource();
-  }, [stepSource]);
+  }, []);
 
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoaded, setNotifLoaded] = useState(false);

@@ -23,11 +23,7 @@ import type { MissionParams } from '@/features/missions/types';
  */
 const GOAL_STEPS = 8000;
 
-// TODO Sprint 5: estos valores serán dinámicos cuando se calculen métricas
-// derivadas (calorías y distancia) desde pasos reales.
 const USER_NAME = 'Gerry';
-const MOCK_CALORIES = 312;
-const MOCK_DISTANCE_KM = 2.4;
 
 /**
  * Deriva `(currentSteps, goalSteps)` para `ProgressRing` a partir de la
@@ -164,13 +160,13 @@ export default function HomeScreen() {
 
         <View style={metricsRowStyle}>
           <View style={metricStyle}>
-            <Text variant="headlineMd">{MOCK_CALORIES}</Text>
+            <Text variant="headlineMd">{Math.round(stepsToday * 0.04)}</Text>
             <Text variant="labelSm" color="onSurfaceVariant">
               Calorías
             </Text>
           </View>
           <View style={metricStyle}>
-            <Text variant="headlineMd">{MOCK_DISTANCE_KM.toLocaleString('es-AR')} km</Text>
+            <Text variant="headlineMd">{(stepsToday * 0.00078).toFixed(1)} km</Text>
             <Text variant="labelSm" color="onSurfaceVariant">
               Distancia
             </Text>

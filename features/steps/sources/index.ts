@@ -15,7 +15,7 @@
  */
 
 import { Platform } from 'react-native';
-import Constants, { AppOwnership, ExecutionEnvironment } from 'expo-constants';
+import Constants, { AppOwnership } from 'expo-constants';
 
 import { PedometerStepSource } from './PedometerStepSource';
 import { SimulatedStepSource } from './SimulatedStepSource';
@@ -27,24 +27,16 @@ export { SimulatedStepSource } from './SimulatedStepSource';
 let instance: StepSource | null = null;
 
 /**
- * ¿Estamos corriendo dentro de Expo Go?
+ * ¿Debemos usar el simulador en lugar del Pedómetro?
  *
- * Combina las dos señales disponibles porque ninguna es suficiente por sí sola
- * en este proyecto (SDK 54 con `expo-dev-client` instalado):
- * - `executionEnvironment === StoreClient` es la API "moderna", pero con un
- *   dev-client en el árbol puede reportar `bare`/`undefined` en Expo Go, lo que
- *   hacía caer la selección al Pedometer y crasheaba el panel del simulador.
- * - `appOwnership === 'expo'` está deprecado pero sigue siendo el indicador
- *   fiable y específico de Expo Go (es el que usaba el diseño original).
- *
- * Con OR, basta que CUALQUIERA detecte Expo Go para usar el simulador, que es
- * el lado seguro: nunca intentamos leer un sensor que no existe.
+ * - `__DEV__` es `true` en Expo Go y en cualquier build de desarrollo; es la
+ *   señal más fiable en SDK 54 con expo-dev-client instalado, donde
+ *   `Constants.appOwnership` puede devolver `null` incluso dentro de Expo Go.
+ * - `appOwnership === 'expo'` se mantiene como respaldo para el caso en que
+ *   `__DEV__` no esté disponible en algún entorno de CI/build exótico.
  */
 function isExpoGo(): boolean {
-  return (
-    Constants.appOwnership === AppOwnership.Expo ||
-    Constants.executionEnvironment === ExecutionEnvironment.StoreClient
-  );
+  return __DEV__ || Constants.appOwnership === AppOwnership.Expo;
 }
 
 function createStepSource(): StepSource {
@@ -62,6 +54,8 @@ function createStepSource(): StepSource {
 export function getStepSource(): StepSource {
   if (instance === null) {
     instance = createStepSource();
+    console.log('[StepSource] appOwnership:', Constants.appOwnership);
+    console.log('[StepSource] kind:', instance.kind);
   }
   return instance;
 }
