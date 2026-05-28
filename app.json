@@ -16,7 +16,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.gerardogreaves.tally",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "Tally lee tus pasos para mostrar tu progreso y calcular tu deuda de pasos."
       }
     },
     "android": {
@@ -34,7 +35,13 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-font"
+      "expo-font",
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "Tally lee tus pasos para calcular tu progreso diario."
+        }
+      ]
     ],
     "extra": {
       "router": {},

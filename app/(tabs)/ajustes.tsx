@@ -313,7 +313,11 @@ export default function AjustesScreen() {
         <SettingsSection title="Simulador">
           <SettingsRow
             label="Fuente de datos"
-            value={isSimulated ? 'Simulado' : 'Pedómetro'}
+            value={
+              getStepSource().kind === 'healthkit' ? 'Apple Health' :
+              getStepSource().kind === 'pedometer' ? 'Pedómetro' :
+              'Simulado'
+            }
             isLast
           />
         </SettingsSection>
@@ -343,7 +347,11 @@ export default function AjustesScreen() {
           <SettingsRow label="Versión" value={appVersion} />
           <SettingsRow
             label="Fuente de pasos"
-            value={isSimulated ? 'Simulador (desarrollo)' : 'Pedómetro (dispositivo)'}
+            value={
+              getStepSource().kind === 'healthkit' ? 'Apple Health' :
+              getStepSource().kind === 'pedometer' ? 'Pedómetro (dispositivo)' :
+              'Simulador (desarrollo)'
+            }
             isLast
           />
         </SettingsSection>

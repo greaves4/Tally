@@ -17,6 +17,7 @@
 import { Platform } from 'react-native';
 import Constants, { AppOwnership } from 'expo-constants';
 
+import { HealthKitStepSource } from './HealthKitStepSource';
 import { PedometerStepSource } from './PedometerStepSource';
 import { SimulatedStepSource } from './SimulatedStepSource';
 import type { StepSource } from './StepSource';
@@ -44,8 +45,12 @@ function createStepSource(): StepSource {
   if (isExpoGo()) {
     return new SimulatedStepSource();
   }
-  // Build nativo en iOS o Android: usar el Pedómetro real del dispositivo.
-  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+  // Build nativo iOS: HealthKit tiene prioridad (acceso completo al historial del día).
+  if (Platform.OS === 'ios') {
+    return new HealthKitStepSource();
+  }
+  // Build nativo Android: Pedómetro (HealthKit no existe en Android).
+  if (Platform.OS === 'android') {
     return new PedometerStepSource();
   }
   return new SimulatedStepSource();

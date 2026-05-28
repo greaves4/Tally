@@ -1,5 +1,5 @@
 import { View, type ViewStyle } from 'react-native';
-import { Smartphone, Tag } from 'lucide-react-native';
+import { Heart, Smartphone, Tag } from 'lucide-react-native';
 import { Text } from '@/components/base/Text';
 import { useTheme } from '@/design-system/useTheme';
 
@@ -12,7 +12,7 @@ import { useTheme } from '@/design-system/useTheme';
  * acoplarse a la capa de datos. Si el set crece en el futuro, mobile-dev
  * decide si centralizar la unión en `types/`.
  */
-export type DataSourceKind = 'simulated' | 'pedometer';
+export type DataSourceKind = 'simulated' | 'pedometer' | 'healthkit';
 
 export type DataSourceIndicatorProps = {
   source: DataSourceKind;
@@ -31,19 +31,25 @@ const ICON_SIZE = 14;
 export function DataSourceIndicator({ source }: DataSourceIndicatorProps) {
   const theme = useTheme();
 
-  const isSimulated = source === 'simulated';
+  const backgroundColor =
+    source === 'simulated'
+      ? theme.colors.secondaryContainer
+      : theme.colors.primaryContainer;
 
-  const backgroundColor = isSimulated
-    ? theme.colors.secondaryContainer
-    : theme.colors.primaryContainer;
+  const foregroundColor =
+    source === 'simulated'
+      ? theme.colors.onSecondaryContainer
+      : theme.colors.onPrimaryContainer;
 
-  const foregroundColor = isSimulated
-    ? theme.colors.onSecondaryContainer
-    : theme.colors.onPrimaryContainer;
+  const label =
+    source === 'healthkit' ? 'Apple Health' :
+    source === 'pedometer' ? 'Pedómetro' :
+    'Simulador';
 
-  const label = isSimulated ? 'Simulador' : 'Pedómetro';
-
-  const Icon = isSimulated ? Tag : Smartphone;
+  const Icon =
+    source === 'healthkit' ? Heart :
+    source === 'pedometer' ? Smartphone :
+    Tag;
 
   const containerStyle: ViewStyle = {
     flexDirection: 'row',

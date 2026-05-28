@@ -12,7 +12,7 @@
 export type PermissionStatus = 'granted' | 'denied' | 'undetermined' | 'unavailable';
 
 /** Identifica la implementación concreta activa. Usada por la UI (DataSourceIndicator). */
-export type SourceKind = 'simulated' | 'pedometer';
+export type SourceKind = 'simulated' | 'pedometer' | 'healthkit';
 
 /**
  * Handle devuelto por `watchSteps`. Llamar a `remove()` desuscribe el callback.

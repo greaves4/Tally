@@ -33,7 +33,7 @@ import type {
 // =============================================================================
 
 /** Origen del registro de pasos. Determina qué implementación de StepSource lo produjo. */
-export type SourceType = 'simulated' | 'pedometer';
+export type SourceType = 'simulated' | 'pedometer' | 'healthkit';
 
 /** Un registro diario de pasos, tal como vive en la tabla `daily_steps`. */
 export type DailyStepRecord = {
@@ -178,6 +178,7 @@ export function openDb(): Promise<SQLiteDatabase> {
  */
 function parseSourceType(raw: string): SourceType {
   if (raw === 'pedometer') return 'pedometer';
+  if (raw === 'healthkit') return 'healthkit';
   return 'simulated';
 }
 

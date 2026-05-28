@@ -43,7 +43,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { getStepSource, type StepSource, type Subscription } from '@/features/steps/sources';
 import { getStartOfDay } from '@/lib/dates';
 
-export type StepSourceType = 'simulated' | 'pedometer';
+export type StepSourceType = 'simulated' | 'pedometer' | 'healthkit';
 
 export type UseStepsTodayResult = {
   /** Pasos del día actual (zona horaria local). 0 mientras `isReady=false`. */
